@@ -1,0 +1,32 @@
+﻿#map {
+  height: 600px; /* Tăng chiều cao lên 600px */
+  width: 100%; /* Đảm bảo bản đồ rộng toàn màn hình */
+  margin: 20px 0; /* Thêm margin để bản đồ cách các phần khác */
+}
+
+.input-container {
+  margin: 20px;
+  text-align: center;
+}
+
+.input-container input {
+  margin: 5px;
+  padding: 5px;
+  width: 200px;
+}
+
+#distance {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.button-container {
+  margin-top: 10px;
+}
+
+.button-container button {
+  margin: 5px;
+  padding: 10px;
+  cursor: pointer;
+}
