@@ -1,18 +1,28 @@
-﻿#map {
+﻿/* CSS cho Here Maps */
+
+#map {
   height: 600px; /* Tăng chiều cao lên 600px */
   width: 100%; /* Đảm bảo bản đồ rộng toàn màn hình */
   margin: 20px 0; /* Thêm margin để bản đồ cách các phần khác */
+  border: 2px solid #ccc; /* Viền nhẹ để tạo sự phân biệt */
+  border-radius: 10px; /* Bo tròn góc */
 }
 
 .input-container {
   margin: 20px;
   text-align: center;
+  background: #f9f9f9; /* Nền nhẹ để dễ nhìn hơn */
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .input-container input {
   margin: 5px;
-  padding: 5px;
-  width: 200px;
+  padding: 10px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 #distance {
@@ -27,6 +37,15 @@
 
 .button-container button {
   margin: 5px;
-  padding: 10px;
+  padding: 10px 15px;
   cursor: pointer;
+  background-color: #0072ce; /* Màu đặc trưng của Here Maps */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+.button-container button:hover {
+  background-color: #005a9e;
 }

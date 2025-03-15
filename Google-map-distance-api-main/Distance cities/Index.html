@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tìm Khoảng Cách Giữa Hai Địa Điểm với OpenStreetMap</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <title>Tìm Khoảng Cách Giữa Hai Địa Điểm với Here Maps</title>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <link rel="stylesheet" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
     <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -18,12 +21,12 @@
             <button onclick="setStartPoint()">Chọn điểm đi trên bản đồ</button>
             <button onclick="setEndPoint()">Chọn điểm đến trên bản đồ</button>
         </div>
-        <div id="distance"></div>
-    </div>
-    <div id="map"></div>
+        <div id="routeInfo"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    </div>
+    <div id="map" style="width: 100%; height: 500px;"></div>
+
+    
     <script src="main.js"></script>
 </body>
 </html>
