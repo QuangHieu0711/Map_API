@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -16,16 +16,14 @@
         <h2>Tìm Khoảng Cách Giữa Hai Địa Điểm</h2>
         <input type="text" id="startPoint" placeholder="Nhập điểm đi (ví dụ: Gia Lai)" />
         <input type="text" id="endPoint" placeholder="Nhập điểm đến (ví dụ: Kon Tum)" />
-        <button onclick="calculateDistance()">Tìm</button>
+        <button id="findRouteBtn">Tìm</button>
         <div class="button-container">
             <button onclick="setStartPoint()">Chọn điểm đi trên bản đồ</button>
             <button onclick="setEndPoint()">Chọn điểm đến trên bản đồ</button>
         </div>
         <div id="routeInfo"></div>
-
     </div>
     <div id="map" style="width: 100%; height: 500px;"></div>
-
     
     <script src="main.js"></script>
 </body>
