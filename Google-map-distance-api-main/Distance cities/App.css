@@ -1,50 +1,244 @@
-﻿/* CSS cho Here Maps */
+﻿* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+header {
+  background-color: #0072ce;
+  color: white;
+  padding: 20px 0;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+@media (min-width: 992px) {
+  .app-layout {
+    display: flex;
+    gap: 20px;
+  }
+}
+
+.control-panel {
+  flex: 0 0 350px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.map-container {
+  flex: 1;
+  height: 600px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: #0072ce;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.time-display {
+  background-color: #fff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #0072ce;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.time-display i {
+  margin-right: 8px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.input-with-icon input:focus {
+  border-color: #0072ce;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 114, 206, 0.2);
+}
+
+.input-with-icon i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0072ce;
+}
+
+.datetime-input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.datetime-input:focus {
+  border-color: #0072ce;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 114, 206, 0.2);
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn i {
+  margin-right: 8px;
+}
+
+.btn-primary {
+  background-color: #0072ce;
+  color: white;
+}
+
+.btn-secondary {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary:hover {
+  background-color: #005a9e;
+}
+
+.btn-secondary:hover {
+  background-color: #dee2e6;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+#routeInfo {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#routeInfo p {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #eee;
+}
+
+#routeInfo p:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
 
 #map {
-  height: 600px; /* Tăng chiều cao lên 600px */
-  width: 100%; /* Đảm bảo bản đồ rộng toàn màn hình */
-  margin: 20px 0; /* Thêm margin để bản đồ cách các phần khác */
-  border: 2px solid #ccc; /* Viền nhẹ để tạo sự phân biệt */
-  border-radius: 10px; /* Bo tròn góc */
+  width: 100%;
+  height: 100%;
 }
 
-.input-container {
-  margin: 20px;
-  text-align: center;
-  background: #f9f9f9; /* Nền nhẹ để dễ nhìn hơn */
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
-.input-container input {
-  margin: 5px;
+.map-overlay {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
   padding: 10px;
-  width: 250px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-size: 0.9rem;
+  max-width: 200px;
 }
 
-#distance {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #333;
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
 
-.button-container {
-  margin-top: 10px;
-}
+  .control-panel {
+    flex: 1;
+  }
 
-.button-container button {
-  margin: 5px;
-  padding: 10px 15px;
-  cursor: pointer;
-  background-color: #0072ce; /* Màu đặc trưng của Here Maps */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  transition: background 0.3s;
-}
+  .map-container {
+    height: 400px;
+  }
 
-.button-container button:hover {
-  background-color: #005a9e;
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
