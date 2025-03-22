@@ -237,3 +237,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') findCoords('end');
     });
 });
+
+//Lay vi tri hien tai
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
+                let currentCoords = { lat: lat, lng: lng };
+
+                // Hiển thị vị trí trên bản đồ
+                let currentMarker = new H.map.Marker(currentCoords);
+                map.addObject(currentMarker);
+                map.setCenter(currentCoords);
+                map.setZoom(14);
+
+                // Hiển thị địa chỉ
+                reverseGeocode(lat, lng, function(address) {
+                    document.getElementById('startPoint').value = address;
+                });
+
+                // Lưu vị trí làm điểm bắt đầu
+                startCoords = [lat, lng];
+            },
+            function(error) {
+                alert("Không thể lấy vị trí! Hãy kiểm tra cài đặt trình duyệt.");
+                console.error("Lỗi Geolocation:", error);
+            }
+        );
+    } else {
+        alert("Trình duyệt của bạn không hỗ trợ Geolocation!");
+    }
+}
