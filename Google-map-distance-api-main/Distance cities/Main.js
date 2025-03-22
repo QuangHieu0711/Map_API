@@ -45,7 +45,6 @@ function reverseGeocode(lat, lng, callback) {
         })
         .catch(error => console.error("Lỗi reverse geocoding:", error));
 }
-
 // Hàm để tìm tọa độ từ địa chỉ
 function geocodeAddress(address, callback) {
     if (!address || address.trim() === "") {
