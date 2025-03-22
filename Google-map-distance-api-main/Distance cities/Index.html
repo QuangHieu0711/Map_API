@@ -1,29 +1,76 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tìm Khoảng Cách Giữa Hai Địa Điểm với OpenStreetMap</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <link rel="stylesheet" href="app.css">
+    <title>Tìm Khoảng Cách Giữa Hai Địa Điểm với Here Maps</title>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <link rel="stylesheet" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="App.css">
 </head>
 <body>
-    <div class="input-container">
-        <h2>Tìm Khoảng Cách Giữa Hai Địa Điểm</h2>
-        <input type="text" id="startPoint" placeholder="Nhập điểm đi (ví dụ: Gia Lai)" />
-        <input type="text" id="endPoint" placeholder="Nhập điểm đến (ví dụ: Kon Tum)" />
-        <button onclick="calculateDistance()">Tìm</button>
-        <div class="button-container">
-            <button onclick="setStartPoint()">Chọn điểm đi trên bản đồ</button>
-            <button onclick="setEndPoint()">Chọn điểm đến trên bản đồ</button>
+    <header>
+        <h1>Tìm Khoảng Cách Giữa Hai Địa Điểm</h1>
+    </header>
+    
+    <div class="container">
+        <div class="time-display" id="currentTimeDisplay">
+            <i class="fas fa-clock"></i> Đang cập nhật thời gian...
         </div>
-        <div id="distance"></div>
+        
+        <div class="app-layout">
+            <div class="control-panel">
+                <h2>Thiết Lập Tuyến Đường</h2>
+                
+                <div class="input-group">
+                    <label for="startPoint">Điểm Xuất Phát</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" id="startPoint" placeholder="Nhập điểm đi (ví dụ: Gia Lai)">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="endPoint">Điểm Đến</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-flag"></i>
+                        <input type="text" id="endPoint" placeholder="Nhập điểm đến (ví dụ: Kon Tum)">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="departureTime">Thời gian khởi hành</label>
+                    <input type="datetime-local" id="departureTime" class="datetime-input">
+                </div>
+                
+                <button id="findRouteBtn" class="btn btn-primary btn-block">
+                    <i class="fas fa-route"></i> Tìm Đường
+                </button>
+                
+                <div class="btn-group">
+                    <button id="setStartPointBtn" class="btn btn-secondary">
+                        <i class="fas fa-map-pin"></i> Chọn Điểm Đi
+                    </button>
+                    <button id="setEndPointBtn" class="btn btn-secondary">
+                        <i class="fas fa-location-arrow"></i> Chọn Điểm Đến
+                    </button>
+                </div>
+                
+                <div id="routeInfo" class="route-info">
+                    <p class="text-center text-muted">Chọn điểm xuất phát và điểm đến để hiển thị thông tin tuyến đường</p>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
     </div>
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
     <script src="main.js"></script>
 </body>
 </html>
