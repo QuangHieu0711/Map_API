@@ -185,7 +185,7 @@ function calculateDistance() {
         if (result.routes.length > 0) {
             routes.forEach(route => map.removeObject(route));
             routes = [];
-            document.getElementById("routeInfo").innerHTML = "";
+            document.getElementById("routeDetailsContent").innerHTML = "";
 
             const colors = ["blue", "green", "red"];
             result.routes.forEach((routeData, index) => {
@@ -211,7 +211,7 @@ function calculateDistance() {
                             ${distance} km - ${travelTimeMin} phút ${travelTimeSecRemaining} giây
                         </p>
                     `;
-                    document.getElementById("routeInfo").innerHTML += routeInfo;
+                    document.getElementById("routeDetailsContent").innerHTML += routeInfo;
                 }
             });
         } else {
