@@ -72,9 +72,26 @@ function updateCurrentTime() {
     }
 }
 
+// Cập nhật thời gian mỗi giây (chỉ để hiển thị)
+setInterval(updateCurrentTime, 1000);
+updateCurrentTime();
+
+// Hàm bắt đầu tự động cập nhật thời gian
+function startAutoUpdate() {
+    updateCurrentTime();
+    autoUpdateInterval = setInterval(updateCurrentTime, 1000);
+}
+
+// Hàm đặt điểm đi hoặc điểm đến
+function setPoint(type) {
+    isSettingStartPoint = type === 'start';
+    isSettingEndPoint = type === 'end';
+    alert(`Nhấp vào bản đồ để chọn điểm ${type === 'start' ? 'đi' : 'đến'}.`);
+}
+
 // Hàm chuyển đổi tọa độ thành địa chỉ
 function reverseGeocode(lat, lng, callback) {
-    fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&apikey=obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ`)
+    fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&apikey=Gb_4_oj95K7LCSNQG-cp5Ub4TNfzvgpHDqnz6uz8q34`)
         .then(response => response.json())
         .then(data => {
             callback(data.items[0]?.address.label || "Không thể xác định địa chỉ");
@@ -90,7 +107,7 @@ function geocodeAddress(address, callback) {
         return;
     }
 
-    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apikey=obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ`;
+    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apikey=Gb_4_oj95K7LCSNQG-cp5Ub4TNfzvgpHDqnz6uz8q34`;
 
     fetch(url)
         .then(response => response.json())
@@ -437,20 +454,11 @@ async function generateRandomRoute() {
 
 // Khởi tạo sự kiện khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
+    startAutoUpdate();
 
     document.getElementById('findRouteBtn').addEventListener('click', calculateDistance);
-    document.getElementById('setStartPointBtn').addEventListener('click', () => {
-        isSettingStartPoint = true;
-        isSettingEndPoint = false;
-        alert("Nhấp vào bản đồ để chọn điểm đi.");
-    });
-    document.getElementById('setEndPointBtn').addEventListener('click', () => {
-        isSettingEndPoint = true;
-        isSettingStartPoint = false;
-        alert("Nhấp vào bản đồ để chọn điểm đến.");
-    });
+    document.getElementById('setStartPointBtn').addEventListener('click', () => setPoint('start'));
+    document.getElementById('setEndPointBtn').addEventListener('click', () => setPoint('end'));
     document.getElementById('startPoint').addEventListener('keypress', e => {
         if (e.key === 'Enter') findCoords('start');
     });
