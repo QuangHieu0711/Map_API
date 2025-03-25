@@ -1,34 +1,4 @@
-<<<<<<< Updated upstream
-﻿// Khởi tạo bản đồ với trung tâm mặc định (Hà Nội)
-var map = L.map('map').setView([21.0278, 105.8342], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-}).addTo(map);
-
-// Thêm control geocoder để tìm kiếm địa chỉ
-var geocoder = L.Control.geocoder({
-    defaultMarkGeocode: false
-}).addTo(map);
-
-var startMarker, endMarker, routes = [];
-var startCoords, endCoords;
-var isSettingStartPoint = false;
-var isSettingEndPoint = false;
-
-// Hàm để thiết lập điểm đi
-function setStartPoint() {
-    isSettingStartPoint = true;
-    isSettingEndPoint = false;
-    alert("Nhấp vào bản đồ để chọn điểm đi.");
-}
-
-// Hàm để thiết lập điểm đến
-function setEndPoint() {
-    isSettingEndPoint = true;
-    isSettingStartPoint = false;
-    alert("Nhấp vào bản đồ để chọn điểm đến.");
-=======
-﻿﻿// Khởi tạo bản đồ Here Maps
+// Khởi tạo bản đồ Here Maps
 const platform = new H.service.Platform({
     apikey: 'obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ'
 });
@@ -102,83 +72,73 @@ function updateCurrentTime() {
     }
 }
 
-// Cập nhật thời gian mỗi giây (chỉ để hiển thị)
-setInterval(updateCurrentTime, 1000);
-updateCurrentTime();
-
-// Hàm bắt đầu tự động cập nhật thời gian
-function startAutoUpdate() {
-    updateCurrentTime();
-    autoUpdateInterval = setInterval(updateCurrentTime, 1000);
->>>>>>> Stashed changes
-}
-
-// Hàm để chuyển đổi tọa độ thành địa chỉ (reverse geocoding)
+// Hàm chuyển đổi tọa độ thành địa chỉ
 function reverseGeocode(lat, lng, callback) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&apikey=obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ`)
         .then(response => response.json())
         .then(data => {
-            if (data.display_name) {
-                callback(data.display_name);
-            } else {
-                callback("Không thể xác định địa chỉ");
-            }
+            callback(data.items[0]?.address.label || "Không thể xác định địa chỉ");
         })
-        .catch(error => {
-            console.error("Lỗi reverse geocoding:", error);
-            callback("Lỗi khi lấy địa chỉ");
-        });
+        .catch(error => console.error("Lỗi reverse geocoding:", error));
 }
 
-// Hàm để chuyển đổi địa chỉ thành tọa độ (geocoding)
+// Hàm tìm tọa độ từ địa chỉ
 function geocodeAddress(address, callback) {
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+    if (!address?.trim()) {
+        alert("Vui lòng nhập địa chỉ hợp lệ!");
+        callback(null);
+        return;
+    }
+
+    const url = `https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(address)}&apikey=obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ`;
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
-            if (data.length > 0) {
-                callback([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+            if (data.items.length > 0) {
+                const { lat, lng } = data.items[0].position;
+                callback([lat, lng]);
             } else {
+                alert("Không tìm thấy tọa độ của địa điểm này!");
                 callback(null);
             }
         })
         .catch(error => {
-            console.error("Lỗi geocoding:", error);
+            console.error("Lỗi khi lấy tọa độ:", error);
+            alert("Có lỗi xảy ra khi tìm tọa độ!");
             callback(null);
         });
 }
 
 // Xử lý sự kiện click trên bản đồ
-map.on('click', function(e) {
-    if (isSettingStartPoint) {
-        startCoords = [e.latlng.lat, e.latlng.lng];
-        if (startMarker) map.removeLayer(startMarker);
-        startMarker = L.marker(startCoords).addTo(map)
-            .bindPopup(`Điểm đi: ${startCoords}`).openPopup();
+map.addEventListener('tap', function(evt) {
+    const coord = map.screenToGeo(evt.currentPointer.viewportX, evt.currentPointer.viewportY);
 
-        // Lấy địa chỉ từ tọa độ và cập nhật ô input
-        reverseGeocode(startCoords[0], startCoords[1], function(address) {
-            document.getElementById('startPoint').value = address;
+    if (isSettingStartPoint || isSettingEndPoint) {
+        const isStart = isSettingStartPoint;
+        const coords = [coord.lat, coord.lng];
+        const marker = isStart ? startMarker : endMarker;
+
+        if (marker) map.removeObject(marker);
+        const newMarker = new H.map.Marker(coord);
+        map.addObject(newMarker);
+
+        if (isStart) {
+            startCoords = coords;
+            startMarker = newMarker;
+        } else {
+            endCoords = coords;
+            endMarker = newMarker;
+        }
+
+        reverseGeocode(coord.lat, coord.lng, address => {
+            document.getElementById(isStart ? 'startPoint' : 'endPoint').value = address;
         });
 
-        isSettingStartPoint = false;
-    } else if (isSettingEndPoint) {
-        endCoords = [e.latlng.lat, e.latlng.lng];
-        if (endMarker) map.removeLayer(endMarker);
-        endMarker = L.marker(endCoords).addTo(map)
-            .bindPopup(`Điểm đến: ${endCoords}`).openPopup();
-
-        // Lấy địa chỉ từ tọa độ và cập nhật ô input
-        reverseGeocode(endCoords[0], endCoords[1], function(address) {
-            document.getElementById('endPoint').value = address;
-        });
-
-        isSettingEndPoint = false;
+        isSettingStartPoint = isSettingEndPoint = false;
     }
 });
 
-<<<<<<< Updated upstream
-// Hàm để tính khoảng cách
-=======
 // Hàm tìm tọa độ từ địa chỉ đã nhập
 function findCoords(type) {
     const address = document.getElementById(`${type}Point`).value;
@@ -246,23 +206,12 @@ async function getRandomPoints() {
 }
 
 // Hàm tính toán đường đi
->>>>>>> Stashed changes
 function calculateDistance() {
-    var startAddress = document.getElementById('startPoint').value;
-    var endAddress = document.getElementById('endPoint').value;
-
-    if (!startAddress || !endAddress) {
-        alert("Vui lòng nhập cả điểm đi và điểm đến!");
+    if (!startCoords || !endCoords) {
+        alert("Vui lòng chọn cả điểm đi và điểm đến!");
         return;
     }
 
-<<<<<<< Updated upstream
-    // Geocode địa chỉ điểm đi
-    geocodeAddress(startAddress, function(coords) {
-        if (!coords) {
-            alert("Không thể tìm thấy tọa độ cho điểm đi!");
-            return;
-=======
     // Lấy thời gian hiện tại tại Việt Nam (UTC+7)
     const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
     const currentTime = new Date(vietnamTime);
@@ -360,20 +309,13 @@ function calculateDistance() {
             }
         } else {
             alert("Không thể tìm đường đi!");
->>>>>>> Stashed changes
         }
-        startCoords = coords;
-        if (startMarker) map.removeLayer(startMarker);
-        startMarker = L.marker(startCoords).addTo(map)
-            .bindPopup(`Điểm đi: ${startCoords}`).openPopup();
+    }, error => {
+        console.error("Lỗi tính đường đi:", error);
+        alert("Đã xảy ra lỗi khi tính đường đi!");
+    });
+}
 
-<<<<<<< Updated upstream
-        // Geocode địa chỉ điểm đến
-        geocodeAddress(endAddress, function(coords) {
-            if (!coords) {
-                alert("Không thể tìm thấy tọa độ cho điểm đến!");
-                return;
-=======
 // Hàm tạo tuyến đường ngẫu nhiên và lưu vào cơ sở dữ liệu
 async function generateRandomRoute() {
     try {
@@ -495,11 +437,20 @@ async function generateRandomRoute() {
 
 // Khởi tạo sự kiện khi trang tải xong
 document.addEventListener('DOMContentLoaded', () => {
-    startAutoUpdate();
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 1000);
 
     document.getElementById('findRouteBtn').addEventListener('click', calculateDistance);
-    document.getElementById('setStartPointBtn').addEventListener('click', () => setPoint('start'));
-    document.getElementById('setEndPointBtn').addEventListener('click', () => setPoint('end'));
+    document.getElementById('setStartPointBtn').addEventListener('click', () => {
+        isSettingStartPoint = true;
+        isSettingEndPoint = false;
+        alert("Nhấp vào bản đồ để chọn điểm đi.");
+    });
+    document.getElementById('setEndPointBtn').addEventListener('click', () => {
+        isSettingEndPoint = true;
+        isSettingStartPoint = false;
+        alert("Nhấp vào bản đồ để chọn điểm đến.");
+    });
     document.getElementById('startPoint').addEventListener('keypress', e => {
         if (e.key === 'Enter') findCoords('start');
     });
@@ -535,41 +486,9 @@ function getCurrentLocation() {
             function(error) {
                 alert("Không thể lấy vị trí! Hãy kiểm tra cài đặt trình duyệt.");
                 console.error("Lỗi Geolocation:", error);
->>>>>>> Stashed changes
             }
-            endCoords = coords;
-            if (endMarker) map.removeLayer(endMarker);
-            endMarker = L.marker(endCoords).addTo(map)
-                .bindPopup(`Điểm đến: ${endCoords}`).openPopup();
-
-            // Tính khoảng cách và vẽ đường đi
-            fetch(`https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson&alternatives=true`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.routes && data.routes.length > 0) {
-                        // Xóa các đường cũ (nếu có)
-                        routes.forEach(route => map.removeLayer(route));
-                        routes = [];
-
-                        // Hiển thị tất cả các tuyến đường
-                        data.routes.forEach((routeData, index) => {
-                            var routeCoords = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-                            var routeColor = index === 0 ? 'blue' : index === 1 ? 'green' : 'red'; // Màu sắc khác nhau cho các tuyến
-                            var route = L.polyline(routeCoords, { color: routeColor }).addTo(map);
-                            routes.push(route);
-
-                            // Hiển thị khoảng cách của từng tuyến
-                            var distance = routeData.distance / 1000; // Chuyển từ mét sang km
-                            route.bindPopup(`Tuyến ${index + 1}: ${distance.toFixed(2)} km`).openPopup();
-                        });
-
-                        // Điều chỉnh bản đồ để hiển thị tất cả các tuyến
-                        map.fitBounds(routes[0].getBounds());
-                    } else {
-                        alert("Không thể tính đường đi!");
-                    }
-                })
-                .catch(error => console.error("Lỗi OSRM:", error));
-        });
-    });
+        );
+    } else {
+        alert("Trình duyệt của bạn không hỗ trợ Geolocation!");
+    }
 }
