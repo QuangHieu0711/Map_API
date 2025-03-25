@@ -1,6 +1,6 @@
-// Khởi tạo bản đồ Here Maps
+﻿// Khởi tạo bản đồ Here Maps
 const platform = new H.service.Platform({
-    apikey: 'obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ'
+    apikey: 'obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ' // Thay thế bằng API Key của bạn
 });
 
 const defaultLayers = platform.createDefaultLayers();
