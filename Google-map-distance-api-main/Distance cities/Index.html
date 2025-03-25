@@ -13,10 +13,17 @@
     <link rel="stylesheet" href="App.css">
 </head>
 <body>
+    <div class="input-container">
+        <h2>Tìm Khoảng Cách Giữa Hai Địa Điểm</h2>
+        <input type="text" id="startPoint" placeholder="Nhập điểm đi (ví dụ: Gia Lai)" />
+        <input type="text" id="endPoint" placeholder="Nhập điểm đến (ví dụ: Kon Tum)" />
+        <button onclick="calculateDistance()">Tìm</button>
+        <div class="button-container">
+            <button onclick="setStartPoint()">Chọn điểm đi trên bản đồ</button>
+            <button onclick="setEndPoint()">Chọn điểm đến trên bản đồ</button>
     <header>
         <h1>Tìm Khoảng Cách Giữa Hai Địa Điểm</h1>
     </header>
-    
     <div class="container">
         <div class="time-display" id="currentTimeDisplay">
             <i class="fas fa-clock"></i> Đang cập nhật thời gian...
@@ -60,6 +67,12 @@
                     </button>
                     <button onclick="getCurrentLocation()" class="btn btn-info">
                         <i class="fas fa-crosshairs"></i> Vị trí của tôi
+                    </button>
+                    <!-- Thêm nút Tạo Tuyến Đường Ngẫu Nhiên vào đây -->
+                    <button id="randomRouteBtn" class="btn btn-success">
+                        <i class="fas fa-random"></i> Tạo Ngẫu Nhiên
+                    </button>
+
                     </button>                    
                 </div>
             </div>
