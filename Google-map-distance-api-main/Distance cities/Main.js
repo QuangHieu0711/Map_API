@@ -212,7 +212,7 @@ async function getRandomPoints() {
     };
 }
 
-// Hàm tính toán và vẽ tuyến đường (phần sửa đổi)
+// Hàm tính toán và vẽ tuyến đường (phần sửa đổi cho xe máy)
 function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPointAddress) {
     if (!startCoords || !endCoords) {
         alert("Vui lòng chọn cả điểm đi và điểm đến!");
@@ -237,11 +237,11 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
 
     const departureTime = document.getElementById('departureTime').value;
     const routingParameters = {
-        transportMode: 'car',
+        transportMode: 'scooter', // Thay đổi từ 'car' thành 'motorcycle'
         origin: `${startCoords[0]},${startCoords[1]}`,
         destination: `${endCoords[0]},${endCoords[1]}`,
         return: 'polyline,summary,actions,instructions',
-        alternatives: 3,
+        alternatives: 2, // Tổng cộng 3 tuyến
         departureTime: departureTime ? new Date(departureTime).toISOString() : new Date().toISOString(),
         lang: 'vi-VN'
     };
@@ -249,16 +249,18 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
     const router = platform.getRoutingService(null, 8);
     router.calculateRoute(routingParameters, result => {
         if (result.routes.length > 0) {
-            const colors = ["blue", "green", "red", "purple"];
+            const colors = ["blue", "green", "red"];
             let routesToSend = [];
 
-            result.routes.forEach((routeData, index) => {
+            const limitedRoutes = result.routes.slice(0, 3);
+
+            limitedRoutes.forEach((routeData, index) => {
                 if (routeData.sections.length > 0) {
                     const routeShape = routeData.sections[0].polyline;
                     const linestring = H.geo.LineString.fromFlexiblePolyline(routeShape);
                     const polyline = new H.map.Polyline(linestring, {
                         style: { 
-                            strokeColor: colors[index % colors.length], 
+                            strokeColor: colors[index], 
                             lineWidth: 5 
                         }
                     });
@@ -275,9 +277,10 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
                     map.addObject(startMarker);
                     map.addObject(endMarker);
 
-                    // Xử lý các bước di chuyển (maneuvers) - PHẦN ĐÃ SỬA
+                    // Xử lý các bước di chuyển (maneuvers)
                     const maneuvers = routeData.sections[0].actions || [];
-                    
+                    let instructionsHTML = `<ul style="list-style-type: none; padding-left: 0;">`;
+
                     maneuvers.forEach((maneuver, maneuverIndex) => {
                         const offset = maneuver.offset;
                         let instruction = maneuver.instruction;
@@ -290,31 +293,29 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
                         const lat = polylineCoords[coordIndex];
                         const lng = polylineCoords[coordIndex + 1];
 
+                        instructionsHTML += `<li style="margin-bottom: 5px;">${maneuverIndex + 1}. ${instruction}</li>`;
+
                         if (typeof lat === 'number' && typeof lng === 'number') {
-                            // Tạo chấm trắng với viền đậm để nổi bật trên đường đi
                             const maneuverDot = new H.map.Circle(
-                                { lat: lat, lng: lng }, // Tâm
-                                15, // Bán kính (pixel) - tăng lên một chút
+                                { lat: lat, lng: lng },
+                                15,
                                 {
                                     style: {
-                                        fillColor: 'white',
-                                        strokeColor: colors[index % colors.length], // Dùng màu giống đường đi
-                                        lineWidth: 3 // Viền dày hơn
+                                        fillColor: 'rgba(255, 255, 255, 1)',
+                                        strokeColor: 'rgba(255, 255, 255, 1)',
+                                        lineWidth: 1
                                     },
-                                    volatility: true // Giúp marker luôn hiển thị trên cùng
+                                    volatility: true
                                 }
                             );
-
-                            // Thêm sự kiện tap để hiển thị hướng dẫn
                             maneuverDot.addEventListener('tap', function(evt) {
                                 ui.getBubbles().forEach(bubble => ui.removeBubble(bubble));
                                 const bubble = new H.ui.InfoBubble(
                                     { lat: lat, lng: lng },
                                     { 
                                         content: `<div style="padding: 10px; font-size: 14px;">${instruction}</div>`,
-                                        // Đặt nền bubble theo màu route để dễ phân biệt
                                         style: {
-                                            backgroundColor: colors[index % colors.length],
+                                            backgroundColor: colors[index],
                                             color: 'white'
                                         }
                                     }
@@ -326,8 +327,8 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
                             maneuverMarkers.push(maneuverDot);
                         }
                     });
+                    instructionsHTML += `</ul>`;
 
-                    // Phần còn lại giữ nguyên...
                     const distance = (routeData.sections[0].summary.length / 1000).toFixed(2);
                     const travelTimeSec = routeData.sections[0].summary.duration;
                     const travelTimeMin = Math.floor(travelTimeSec / 60);
@@ -343,16 +344,21 @@ function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPoi
                     });
 
                     const routeSummary = `
-                        <p style="color: ${colors[index % colors.length]};">
-                            🔹 <strong>Tuyến đường ${index + 1}:</strong> 
-                            ${distance} km - ${travelTimeMin} phút ${travelTimeSecRemaining} giây
-                        </p>
+                        <div style="color: ${colors[index]};">
+                            <p>
+                                🔹 <strong>Tuyến đường ${index + 1}:</strong> 
+                                ${distance} km - ${travelTimeMin} phút ${travelTimeSecRemaining} giây
+                            </p>
+                            <details>
+                                <summary>Hướng dẫn chi tiết</summary>
+                                ${instructionsHTML}
+                            </details>
+                        </div>
                     `;
                     document.getElementById("routeDetailsContent").innerHTML += routeSummary;
                 }
             });
 
-            // Phần gửi dữ liệu đến server giữ nguyên...
             if (routesToSend.length > 0) {
                 const routesToCompare = routesToSend.map(route => ({
                     date: route.date,
