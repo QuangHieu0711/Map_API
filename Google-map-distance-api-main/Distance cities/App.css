@@ -7,6 +7,7 @@
 
 html, body {
   height: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
 }
@@ -25,6 +26,9 @@ header {
   padding: 20px 0;
   text-align: center;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 header h1 {
@@ -39,6 +43,7 @@ header h1 {
   max-width: 100%;
   margin: 0;
   padding: 0;
+  min-height: calc(100vh - 80px); /* 80px là chiều cao ước tính của header */
 }
 
 .app-layout {
@@ -46,6 +51,7 @@ header h1 {
   flex: 1;
   gap: 20px;
   padding: 20px;
+  min-height: 0;
 }
 
 .control-panel {
@@ -58,10 +64,10 @@ header h1 {
 
 .map-container {
   flex: 1;
-  height: calc(100vh - 160px); /* Chiều cao toàn màn hình trừ header và padding */
   border-radius: 10px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-height: 400px;
+  overflow: visible;
 }
 
 .route-details {
@@ -212,6 +218,28 @@ h2 {
   height: 100%;
 }
 
+#map .H_map_marker {
+  z-index: 1000;
+  display: block;
+  opacity: 1;
+}
+
+#map .H_map_marker img {
+  width: 12px; /* Đặt kích thước nhỏ cho chấm */
+  height: 12px; /* Đặt kích thước nhỏ cho chấm */
+  background-color: white; /* Màu trắng cho marker */
+  border-radius: 50%; /* Tạo hình tròn */
+  border: 2px solid #0072ce; /* Đường viền màu xanh dương cho marker */
+}
+
+.H_ib_body {
+  background-color: #fff;
+  border: 1px solid #0072ce;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
   .app-layout {
@@ -219,11 +247,13 @@ h2 {
   }
 
   .control-panel, .route-details {
-    flex: 1;
+    flex: 0 0 auto;
+    max-width: 100%;
   }
 
   .map-container {
-    height: 400px;
+    height: 50vh;
+    min-height: 300px;
   }
 
   .btn-group {
