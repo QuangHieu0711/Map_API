@@ -1,6 +1,6 @@
 ﻿// Khởi tạo bản đồ Here Maps
 const platform = new H.service.Platform({
-    apikey: 'obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ' // Thay thế bằng API Key của bạn
+    apikey: 'obtUNXXVNEw-lseLFfxlrirLW8Z8Zn578K8fTYSJnXQ'
 });
 
 const defaultLayers = platform.createDefaultLayers();
@@ -11,12 +11,11 @@ const map = new H.Map(document.getElementById('map'), defaultLayers.vector.norma
 const ui = H.ui.UI.createDefault(map, defaultLayers);
 const behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 
-let startMarker, endMarker, routes = [];
+let startMarker, endMarker, routes = [], maneuverMarkers = [];
 let startCoords, endCoords;
 let isSettingStartPoint = false;
 let isSettingEndPoint = false;
-let autoUpdateInterval;
-let lastSentData = null; // Lưu dữ liệu đã gửi cuối cùng
+let lastSentData = null;
 
 // Danh sách các quận tại Hà Nội với phạm vi tọa độ
 const districts = [
@@ -34,6 +33,24 @@ const districts = [
     { name: "Nam Từ Liêm", latRange: [21.0100, 21.0400], lngRange: [105.7400, 105.7700] }
 ];
 
+// Hàm dịch hướng dẫn sang tiếng Việt (dùng nếu API không trả về tiếng Việt)
+function translateInstruction(instruction) {
+    let translated = instruction;
+
+    translated = translated.replace("Turn left", "Rẽ trái");
+    translated = translated.replace("Turn right", "Rẽ phải");
+    translated = translated.replace("Turn slightly left", "Rẽ nhẹ sang trái");
+    translated = translated.replace("Turn slightly right", "Rẽ nhẹ sang phải");
+    translated = translated.replace("Continue on", "Tiếp tục trên");
+    translated = translated.replace("Go for", "Đi thêm");
+    translated = translated.replace("m.", "mét.");
+
+    translated = translated.replace("onto", "vào");
+    translated = translated.replace("toward", "hướng tới");
+
+    return translated;
+}
+
 // Hàm tạo ngẫu nhiên tọa độ trong một quận
 function getRandomCoordsInDistrict() {
     const districtIndex = Math.floor(Math.random() * districts.length);
@@ -47,15 +64,9 @@ function getRandomCoordsInDistrict() {
 
 // Hàm cập nhật thời gian hiện tại vào input datetime-local
 function updateCurrentTime() {
-    const now = new Date();
-    
-    // Chuyển sang múi giờ Việt Nam (UTC+7)
     const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-
-    // Chuyển về đối tượng Date để dễ xử lý
     const localVietnamTime = new Date(vietnamTime);
 
-    // Định dạng thời gian thành chuỗi YYYY-MM-DDThh:mm để đặt vào input
     const year = localVietnamTime.getFullYear();
     const month = String(localVietnamTime.getMonth() + 1).padStart(2, '0');
     const day = String(localVietnamTime.getDate()).padStart(2, '0');
@@ -65,7 +76,6 @@ function updateCurrentTime() {
     const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
     document.getElementById('departureTime').value = formattedDateTime;
 
-    // Hiển thị thời gian thực trên giao diện
     const displayTime = document.getElementById('currentTimeDisplay');
     if (displayTime) {
         displayTime.textContent = `Thời gian hiện tại: ${hours}:${minutes} ${day}/${month}/${year}`;
@@ -171,16 +181,13 @@ function findCoords(type) {
 
 // Hàm chọn ngẫu nhiên điểm đi và điểm đến trong các quận của Hà Nội
 async function getRandomPoints() {
-    // Chọn ngẫu nhiên điểm đi
     const startPoint = getRandomCoordsInDistrict();
     let endPoint;
 
-    // Chọn ngẫu nhiên điểm đến, đảm bảo không trùng quận với điểm đi
     do {
         endPoint = getRandomCoordsInDistrict();
     } while (endPoint.district === startPoint.district);
 
-    // Lấy địa chỉ từ tọa độ bằng Reverse Geocoding
     const startAddress = await new Promise(resolve => {
         reverseGeocode(startPoint.coords[0], startPoint.coords[1], address => {
             resolve(address);
@@ -205,14 +212,22 @@ async function getRandomPoints() {
     };
 }
 
-// Hàm tính toán đường đi
-function calculateDistance() {
+// Hàm tính toán và vẽ tuyến đường (phần sửa đổi)
+function calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPointAddress) {
     if (!startCoords || !endCoords) {
         alert("Vui lòng chọn cả điểm đi và điểm đến!");
         return;
     }
 
-    // Lấy thời gian hiện tại tại Việt Nam (UTC+7)
+    // Xóa các tuyến đường và marker cũ
+    routes.forEach(route => map.removeObject(route));
+    maneuverMarkers.forEach(marker => map.removeObject(marker));
+    if (startMarker) map.removeObject(startMarker);
+    if (endMarker) map.removeObject(endMarker);
+    routes = [];
+    maneuverMarkers = [];
+    document.getElementById("routeDetailsContent").innerHTML = "";
+
     const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
     const currentTime = new Date(vietnamTime);
     const hours = String(currentTime.getHours()).padStart(2, '0');
@@ -225,19 +240,16 @@ function calculateDistance() {
         transportMode: 'car',
         origin: `${startCoords[0]},${startCoords[1]}`,
         destination: `${endCoords[0]},${endCoords[1]}`,
-        return: 'polyline,summary',
+        return: 'polyline,summary,actions,instructions',
         alternatives: 3,
-        departureTime: departureTime ? new Date(departureTime).toISOString() : new Date().toISOString()
+        departureTime: departureTime ? new Date(departureTime).toISOString() : new Date().toISOString(),
+        lang: 'vi-VN'
     };
 
     const router = platform.getRoutingService(null, 8);
     router.calculateRoute(routingParameters, result => {
         if (result.routes.length > 0) {
-            routes.forEach(route => map.removeObject(route));
-            routes = [];
-            document.getElementById("routeDetailsContent").innerHTML = "";
-
-            const colors = ["blue", "green", "red"];
+            const colors = ["blue", "green", "red", "purple"];
             let routesToSend = [];
 
             result.routes.forEach((routeData, index) => {
@@ -245,41 +257,102 @@ function calculateDistance() {
                     const routeShape = routeData.sections[0].polyline;
                     const linestring = H.geo.LineString.fromFlexiblePolyline(routeShape);
                     const polyline = new H.map.Polyline(linestring, {
-                        style: { strokeColor: colors[index % colors.length], lineWidth: 5 }
+                        style: { 
+                            strokeColor: colors[index % colors.length], 
+                            lineWidth: 5 
+                        }
                     });
+
+                    const polylineCoords = linestring.getLatLngAltArray();
 
                     map.addObject(polyline);
                     routes.push(polyline);
                     map.getViewModel().setLookAtData({ bounds: polyline.getBoundingBox() });
 
+                    // Thêm marker cho điểm xuất phát và điểm đến
+                    startMarker = new H.map.Marker({ lat: startCoords[0], lng: startCoords[1] });
+                    endMarker = new H.map.Marker({ lat: endCoords[0], lng: endCoords[1] });
+                    map.addObject(startMarker);
+                    map.addObject(endMarker);
+
+                    // Xử lý các bước di chuyển (maneuvers) - PHẦN ĐÃ SỬA
+                    const maneuvers = routeData.sections[0].actions || [];
+                    
+                    maneuvers.forEach((maneuver, maneuverIndex) => {
+                        const offset = maneuver.offset;
+                        let instruction = maneuver.instruction;
+
+                        if (!instruction.includes("Rẽ") && !instruction.includes("Tiếp tục")) {
+                            instruction = translateInstruction(instruction);
+                        }
+
+                        const coordIndex = offset * 3;
+                        const lat = polylineCoords[coordIndex];
+                        const lng = polylineCoords[coordIndex + 1];
+
+                        if (typeof lat === 'number' && typeof lng === 'number') {
+                            // Tạo chấm trắng với viền đậm để nổi bật trên đường đi
+                            const maneuverDot = new H.map.Circle(
+                                { lat: lat, lng: lng }, // Tâm
+                                15, // Bán kính (pixel) - tăng lên một chút
+                                {
+                                    style: {
+                                        fillColor: 'white',
+                                        strokeColor: colors[index % colors.length], // Dùng màu giống đường đi
+                                        lineWidth: 3 // Viền dày hơn
+                                    },
+                                    volatility: true // Giúp marker luôn hiển thị trên cùng
+                                }
+                            );
+
+                            // Thêm sự kiện tap để hiển thị hướng dẫn
+                            maneuverDot.addEventListener('tap', function(evt) {
+                                ui.getBubbles().forEach(bubble => ui.removeBubble(bubble));
+                                const bubble = new H.ui.InfoBubble(
+                                    { lat: lat, lng: lng },
+                                    { 
+                                        content: `<div style="padding: 10px; font-size: 14px;">${instruction}</div>`,
+                                        // Đặt nền bubble theo màu route để dễ phân biệt
+                                        style: {
+                                            backgroundColor: colors[index % colors.length],
+                                            color: 'white'
+                                        }
+                                    }
+                                );
+                                ui.addBubble(bubble);
+                            });
+
+                            map.addObject(maneuverDot);
+                            maneuverMarkers.push(maneuverDot);
+                        }
+                    });
+
+                    // Phần còn lại giữ nguyên...
                     const distance = (routeData.sections[0].summary.length / 1000).toFixed(2);
                     const travelTimeSec = routeData.sections[0].summary.duration;
                     const travelTimeMin = Math.floor(travelTimeSec / 60);
                     const travelTimeSecRemaining = Math.floor(travelTimeSec % 60);
 
-                    const startPoint = document.getElementById('startPoint').value;
-                    const endPoint = document.getElementById('endPoint').value;
-
                     routesToSend.push({
                         date: currentTime.toISOString().split('T')[0],
                         time: formattedTime,
-                        startPoint: startPoint,
-                        endPoint: endPoint,
+                        startPoint: startPointAddress,
+                        endPoint: endPointAddress,
                         distance: distance,
                         travelTime: travelTimeMin * 60 + travelTimeSecRemaining
                     });
 
-                    const routeInfo = `
+                    const routeSummary = `
                         <p style="color: ${colors[index % colors.length]};">
                             🔹 <strong>Tuyến đường ${index + 1}:</strong> 
                             ${distance} km - ${travelTimeMin} phút ${travelTimeSecRemaining} giây
                         </p>
                     `;
-                    document.getElementById("routeDetailsContent").innerHTML += routeInfo;
+                    document.getElementById("routeDetailsContent").innerHTML += routeSummary;
                 }
             });
 
-            // Kiểm tra xem dữ liệu có khác với lần gửi trước không (bỏ qua time)
+            // Phần gửi dữ liệu đến server giữ nguyên...
             if (routesToSend.length > 0) {
                 const routesToCompare = routesToSend.map(route => ({
                     date: route.date,
@@ -303,8 +376,6 @@ function calculateDistance() {
                         lastSentData = currentDataString;
                     })
                     .catch(error => console.error('Lỗi khi gửi dữ liệu:', error));
-                } else {
-                    console.log('Dữ liệu trùng lặp, không gửi lại.');
                 }
             }
         } else {
@@ -316,6 +387,13 @@ function calculateDistance() {
     });
 }
 
+// Hàm tính toán đường đi từ input người dùng
+function calculateDistance() {
+    const startPointAddress = document.getElementById('startPoint').value;
+    const endPointAddress = document.getElementById('endPoint').value;
+    calculateAndDrawRoute(startCoords, endCoords, startPointAddress, endPointAddress);
+}
+
 // Hàm tạo tuyến đường ngẫu nhiên và lưu vào cơ sở dữ liệu
 async function generateRandomRoute() {
     try {
@@ -323,115 +401,44 @@ async function generateRandomRoute() {
         startCoords = points.start.coords;
         endCoords = points.end.coords;
 
-        // Cập nhật giá trị điểm đi và điểm đến trên giao diện
         document.getElementById('startPoint').value = points.start.address;
         document.getElementById('endPoint').value = points.end.address;
 
-        // Lấy thời gian hiện tại tại Việt Nam (UTC+7)
-        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-        const currentTime = new Date(vietnamTime);
-        const hours = String(currentTime.getHours()).padStart(2, '0');
-        const minutes = String(currentTime.getMinutes()).padStart(2, '0');
-        const seconds = String(currentTime.getSeconds()).padStart(2, '0');
-        const formattedTime = `${hours}:${minutes}:${seconds}`;
-
-        const departureTime = document.getElementById('departureTime').value;
-        const routingParameters = {
-            transportMode: 'car',
-            origin: `${startCoords[0]},${startCoords[1]}`,
-            destination: `${endCoords[0]},${endCoords[1]}`,
-            return: 'polyline,summary',
-            alternatives: 3,
-            departureTime: departureTime ? new Date(departureTime).toISOString() : new Date().toISOString()
-        };
-
-        const router = platform.getRoutingService(null, 8);
-        router.calculateRoute(routingParameters, result => {
-            if (result.routes.length > 0) {
-                routes.forEach(route => map.removeObject(route));
-                routes = [];
-                document.getElementById("routeDetailsContent").innerHTML = "";
-
-                const colors = ["blue", "green", "red"];
-                let routesToSend = [];
-
-                result.routes.forEach((routeData, index) => {
-                    if (routeData.sections.length > 0) {
-                        const routeShape = routeData.sections[0].polyline;
-                        const linestring = H.geo.LineString.fromFlexiblePolyline(routeShape);
-                        const polyline = new H.map.Polyline(linestring, {
-                            style: { strokeColor: colors[index % colors.length], lineWidth: 5 }
-                        });
-
-                        map.addObject(polyline);
-                        routes.push(polyline);
-                        map.getViewModel().setLookAtData({ bounds: polyline.getBoundingBox() });
-
-                        const distance = (routeData.sections[0].summary.length / 1000).toFixed(2);
-                        const travelTimeSec = routeData.sections[0].summary.duration;
-                        const travelTimeMin = Math.floor(travelTimeSec / 60);
-                        const travelTimeSecRemaining = Math.floor(travelTimeSec % 60);
-
-                        const startPoint = points.start.address;
-                        const endPoint = points.end.address;
-
-                        routesToSend.push({
-                            date: currentTime.toISOString().split('T')[0],
-                            time: formattedTime,
-                            startPoint: startPoint,
-                            endPoint: endPoint,
-                            distance: distance,
-                            travelTime: travelTimeMin * 60 + travelTimeSecRemaining
-                        });
-
-                        const routeInfo = `
-                            <p style="color: ${colors[index % colors.length]};">
-                                🔹 <strong>Tuyến đường ${index + 1}:</strong> 
-                                ${distance} km - ${travelTimeMin} phút ${travelTimeSecRemaining} giây
-                            </p>
-                        `;
-                        document.getElementById("routeDetailsContent").innerHTML += routeInfo;
-                    }
-                });
-
-                // Kiểm tra xem dữ liệu có khác với lần gửi trước không (bỏ qua time)
-                if (routesToSend.length > 0) {
-                    const routesToCompare = routesToSend.map(route => ({
-                        date: route.date,
-                        startPoint: route.startPoint,
-                        endPoint: route.endPoint,
-                        distance: route.distance,
-                        travelTime: route.travelTime
-                    }));
-                    const currentDataString = JSON.stringify(routesToCompare);
-                    if (lastSentData !== currentDataString) {
-                        fetch('http://localhost:3000/save-route', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(routesToSend)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Dữ liệu đã được lưu:', data);
-                            lastSentData = currentDataString;
-                        })
-                        .catch(error => console.error('Lỗi khi gửi dữ liệu:', error));
-                    } else {
-                        console.log('Dữ liệu trùng lặp, không gửi lại.');
-                    }
-                }
-            } else {
-                alert("Không thể tìm đường đi!");
-            }
-        }, error => {
-            console.error("Lỗi tính đường đi:", error);
-            alert("Đã xảy ra lỗi khi tính đường đi!");
-        });
+        calculateAndDrawRoute(startCoords, endCoords, points.start.address, points.end.address);
     } catch (error) {
         console.error("Lỗi khi tạo tuyến đường ngẫu nhiên:", error);
         alert("Đã xảy ra lỗi khi tạo tuyến đường ngẫu nhiên!");
+    }
+}
+
+// Lấy vị trí hiện tại
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
+                let currentCoords = { lat: lat, lng: lng };
+
+                let currentMarker = new H.map.Marker(currentCoords);
+                map.addObject(currentMarker);
+                map.setCenter(currentCoords);
+                map.setZoom(14);
+
+                reverseGeocode(lat, lng, function(address) {
+                    document.getElementById('startPoint').value = address;
+                });
+
+                startCoords = [lat, lng];
+                startMarker = currentMarker;
+            },
+            function(error) {
+                alert("Không thể lấy vị trí! Hãy kiểm tra cài đặt trình duyệt.");
+                console.error("Lỗi Geolocation:", error);
+            }
+        );
+    } else {
+        alert("Trình duyệt của bạn không hỗ trợ Geolocation!");
     }
 }
 
@@ -459,36 +466,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('randomRouteBtn').addEventListener('click', generateRandomRoute);
 });
-
-// Lấy vị trí hiện tại
-function getCurrentLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                let lat = position.coords.latitude;
-                let lng = position.coords.longitude;
-                let currentCoords = { lat: lat, lng: lng };
-
-                // Hiển thị vị trí trên bản đồ
-                let currentMarker = new H.map.Marker(currentCoords);
-                map.addObject(currentMarker);
-                map.setCenter(currentCoords);
-                map.setZoom(14);
-
-                // Hiển thị địa chỉ
-                reverseGeocode(lat, lng, function(address) {
-                    document.getElementById('startPoint').value = address;
-                });
-
-                // Lưu vị trí làm điểm bắt đầu
-                startCoords = [lat, lng];
-            },
-            function(error) {
-                alert("Không thể lấy vị trí! Hãy kiểm tra cài đặt trình duyệt.");
-                console.error("Lỗi Geolocation:", error);
-            }
-        );
-    } else {
-        alert("Trình duyệt của bạn không hỗ trợ Geolocation!");
-    }
-}
