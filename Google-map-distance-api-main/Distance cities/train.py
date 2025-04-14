@@ -29,7 +29,6 @@ tf.random.set_seed(42)
 torch.manual_seed(42)
 
 # ----------- Tiền xử lý dữ liệu (Chung cho tất cả mô hình) -----------
-# Ghi chú: Hàm này đọc file CSV, lọc dữ liệu, tạo đặc trưng và chuẩn hóa tọa độ
 def preprocess_data(filepath):
     # Đọc file CSV
     df = pd.read_csv(filepath)
@@ -48,7 +47,7 @@ def preprocess_data(filepath):
     df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
     df['minute_sin'] = np.sin(2 * np.pi * df['minute'] / 60)
     df['minute_cos'] = np.cos(2 * np.pi * df['minute'] / 60)
-
+    
     # Xử lý đặc trưng ngày tháng
     df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
     df['day_of_week'] = df['Date'].dt.dayofweek
