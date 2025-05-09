@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+fastapi-cors
+joblib
+darts
+pytorch-lightning
+pandas
+numpy
+scikit-learn
+torch
