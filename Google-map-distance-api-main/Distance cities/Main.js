@@ -512,3 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('randomRouteBtn').addEventListener('click', generateRandomRoute);
 });
+
+
+
+
+'-'
+
+1.2
+
+public class Main{
+    String indentifier = "Main" + '-'  + "1.2";
+}
