@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="App.css">
 </head>
+
 <body>
     <header>
         <h1>Dự Đoán Thời Gian Di Chuyển</h1>
@@ -20,11 +22,11 @@
         <div class="time-display" id="currentTimeDisplay">
             <i class="fas fa-clock"></i> Đang cập nhật thời gian...
         </div>
-        
+
         <div class="app-layout">
             <div class="control-panel">
                 <h2>Thiết Lập Tuyến Đường</h2>
-                
+
                 <div class="input-group">
                     <label for="startPoint">Điểm Xuất Phát</label>
                     <div class="input-with-icon">
@@ -32,7 +34,7 @@
                         <input type="text" id="startPoint" placeholder="Nhập điểm đi (ví dụ: Ba Đình, Hà Nội)">
                     </div>
                 </div>
-                
+
                 <div class="input-group">
                     <label for="endPoint">Điểm Đến</label>
                     <div class="input-with-icon">
@@ -40,42 +42,47 @@
                         <input type="text" id="endPoint" placeholder="Nhập điểm đến (ví dụ: Hoàn Kiếm, Hà Nội)">
                     </div>
                 </div>
-                
+
                 <div class="input-group">
                     <label for="departureTime">Thời gian khởi hành</label>
                     <input type="datetime-local" id="departureTime" class="datetime-input">
                 </div>
-                
-                <button id="findRouteBtn" class="btn btn-primary btn-block">
-                    <i class="fas fa-route"></i> Tìm Đường
-                </button>
-                
-                <div class="btn-group">
+                <!-- Nút Tìm Đường -->
+                <div class="find-route-container">
+                    <button id="findRouteBtn" class="btn btn-primary btn-block">
+                        <i class="fas fa-route"></i> Tìm Đường
+                    </button>
+                </div>
+
+                <!-- Tách 3 nút thành một nhóm riêng -->
+                <div class="btn-group separate-btn-group">
                     <button id="setStartPointBtn" class="btn btn-secondary">
-                        <i class="fas fa-map-pin"></i> Chọn Điểm Đi
+                        <i class="fas fa-home"></i> Chọn Điểm Đi
                     </button>
                     <button id="setEndPointBtn" class="btn btn-secondary">
-                        <i class="fas fa-location-arrow"></i> Chọn Điểm Đến
+                        <i class="fas fa-flag-checkered"></i> Chọn Điểm Đến
                     </button>
-                    <button id="myLocationBtn" class="btn btn-info">
+                    <button id="myLocationBtn" class="btn btn-secondary">
                         <i class="fas fa-crosshairs"></i> Vị trí của tôi
                     </button>
                 </div>
             </div>
-            
+
             <div class="map-container">
                 <div id="map"></div>
             </div>
-            
+
             <div class="route-details">
                 <h2>Thông Tin Tuyến Đường</h2>
                 <div id="routeDetailsContent">
-                    <p class="text-center text-muted">Chọn điểm xuất phát và điểm đến để hiển thị thông tin tuyến đường</p>
+                    <p class="text-center text-muted">Chọn điểm xuất phát và điểm đến để hiển thị thông tin tuyến đường
+                    </p>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="main.js"></script>
 </body>
+
 </html>

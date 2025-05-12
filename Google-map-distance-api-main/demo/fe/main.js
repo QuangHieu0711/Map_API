@@ -470,7 +470,7 @@ document.getElementById('findRouteBtn').addEventListener('click', async () => {
         `;
     } catch (error) {
         console.error('Lỗi:', error);
-        document.getElementById('routeDetailsContent').innerHTML = 
+        document.getElementById('routeDetailsContent').innerHTML =
             `<p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Lỗi: ${error.message}</p>`;
     }
 });
